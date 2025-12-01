@@ -363,7 +363,7 @@ function displaySummary(data) {
     // Display overview cards
     displayOverviewCards(summary.overview);
     
-    // Filter and display only helpful insights (limit to top 5 most relevant)
+    // Filter and display only helpful insights (limit to top 6 most relevant)
     const filteredInsights = filterHelpfulInsights(insights, summary);
     displayInsights(filteredInsights);
     
