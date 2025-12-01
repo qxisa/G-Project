@@ -92,7 +92,7 @@ def parse_dates(df: pd.DataFrame) -> pd.DataFrame:
             
             if is_date_column:
                 try:
-                    df[col] = pd.to_datetime(df[col], errors='coerce', infer_datetime_format=True)
+                    df[col] = pd.to_datetime(df[col], errors='coerce')
                 except Exception:
                     pass
             else:
@@ -101,10 +101,10 @@ def parse_dates(df: pd.DataFrame) -> pd.DataFrame:
                 if len(sample) > 0:
                     try:
                         # Attempt to parse the first few values
-                        test_parse = pd.to_datetime(sample, errors='coerce', infer_datetime_format=True)
+                        test_parse = pd.to_datetime(sample, errors='coerce')
                         # If more than 50% parsed successfully, convert the whole column
                         if test_parse.notna().sum() / len(sample) > 0.5:
-                            df[col] = pd.to_datetime(df[col], errors='coerce', infer_datetime_format=True)
+                            df[col] = pd.to_datetime(df[col], errors='coerce')
                     except Exception:
                         pass
     return df
