@@ -78,7 +78,7 @@ function calculateRSquared(yActual, yPredicted) {
  * @param {number} periods - Number of periods to forecast
  * @returns {Object} Forecast result
  */
-function simpleForecast(data, columnTypes, periods = 5) {
+function simpleForecast(data, columnTypes, periods = 5, valueCol = null) {
     // Check for required columns
     if (!columnTypes.date || columnTypes.date.length === 0) {
         return {
@@ -95,7 +95,19 @@ function simpleForecast(data, columnTypes, periods = 5) {
     }
     
     const dateCol = columnTypes.date[0];
-    const valueCol = columnTypes.numeric[0];
+    
+    // Use specified value column or default to first numeric
+    if (valueCol && columnTypes.numeric.includes(valueCol)) {
+        // Use specified column
+    } else if (valueCol) {
+        return {
+            success: false,
+            error: `Column "${valueCol}" is not a valid numeric column.`
+        };
+    } else {
+        // Default to first numeric column
+        valueCol = columnTypes.numeric[0];
+    }
     
     try {
         // Prepare data - filter valid rows and sort by date

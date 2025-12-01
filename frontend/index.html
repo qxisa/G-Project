@@ -89,6 +89,24 @@
                 <button class="btn btn-chart" data-chart="scatter">🔵 Scatter Plot</button>
             </div>
             
+            <!-- Column Selection Controls -->
+            <div class="column-controls" id="column-controls">
+                <div class="control-group">
+                    <label for="x-column-select">X-Axis Column:</label>
+                    <select id="x-column-select" class="column-select">
+                        <option value="">Auto Select</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="y-column-select">Y-Axis Column:</label>
+                    <select id="y-column-select" class="column-select">
+                        <option value="">Auto Select</option>
+                    </select>
+                </div>
+                <button id="update-chart-btn" class="btn btn-secondary">Update Chart</button>
+                <button id="export-chart-btn" class="btn btn-success">📥 Export Chart</button>
+            </div>
+            
             <!-- Chart Display Area -->
             <div id="chart-container" class="chart-container">
                 <div id="chart" class="chart-placeholder">
@@ -97,13 +115,22 @@
             </div>
         </section>
 
-        <!-- Forecast Section (Initially Hidden) -->
+        <!-- Trends & Predictions Section (Initially Hidden) -->
         <section id="forecast-section" class="section hidden">
-            <h2>🔮 Forecasting</h2>
+            <h2>🔮 Trends & Predictions</h2>
             <div class="forecast-controls">
-                <label for="periods-input">Forecast Periods:</label>
-                <input type="number" id="periods-input" value="5" min="1" max="30" />
+                <div class="control-group">
+                    <label for="forecast-column-select">Select Metric:</label>
+                    <select id="forecast-column-select" class="column-select">
+                        <option value="">Auto Select</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="periods-input">Forecast Periods:</label>
+                    <input type="number" id="periods-input" value="5" min="1" max="30" />
+                </div>
                 <button id="forecast-btn" class="btn btn-primary">Generate Forecast</button>
+                <button id="export-forecast-btn" class="btn btn-success">📥 Export Forecast</button>
             </div>
             <div id="forecast-results" class="forecast-results"></div>
             <div id="forecast-chart" class="chart-container"></div>

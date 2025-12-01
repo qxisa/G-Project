@@ -281,6 +281,7 @@ def forecast_data():
     
     Query Parameters:
         periods: Number of future periods to forecast (default: 5)
+        column: Specific numeric column to forecast (optional)
     
     Returns:
         JSON response with forecast data
@@ -300,10 +301,13 @@ def forecast_data():
         except ValueError:
             periods = 5
         
+        # Get optional column parameter
+        column = request.args.get('column', None)
+        
         df = get_dataframe()
         
         # Generate forecast
-        result = simple_forecast(df, periods=periods)
+        result = simple_forecast(df, periods=periods, value_col=column)
         
         return jsonify(result)
         

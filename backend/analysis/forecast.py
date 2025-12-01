@@ -96,15 +96,16 @@ def calculate_r_squared(Y_actual: np.ndarray, Y_predicted: np.ndarray) -> float:
     return 1 - (ss_res / ss_tot)
 
 
-def simple_forecast(df: pd.DataFrame, periods: int = 5) -> Dict[str, Any]:
+def simple_forecast(df: pd.DataFrame, periods: int = 5, value_col: Optional[str] = None) -> Dict[str, Any]:
     """
     Perform simple linear regression forecast on the dataset.
     
-    Uses the first available date column and first numeric column to make predictions.
+    Uses the first available date column and specified (or first) numeric column to make predictions.
     
     Args:
         df: Input DataFrame
         periods: Number of future periods to forecast
+        value_col: Optional specific numeric column to forecast
         
     Returns:
         Dictionary containing:
@@ -132,9 +133,26 @@ def simple_forecast(df: pd.DataFrame, periods: int = 5) -> Dict[str, Any]:
             'error': 'No numeric columns detected. Forecasting requires numeric data.'
         }
     
-    # Use first date and numeric columns
+    # Use first date column
     date_col = column_types['date'][0]
-    value_col = column_types['numeric'][0]
+    
+    # Use specified value column or default to first numeric
+    if value_col and value_col in column_types['numeric']:
+        # Use specified column
+        pass
+    elif value_col and value_col not in df.columns:
+        return {
+            'success': False,
+            'error': f'Column "{value_col}" not found in dataset.'
+        }
+    elif value_col and value_col not in column_types['numeric']:
+        return {
+            'success': False,
+            'error': f'Column "{value_col}" is not numeric. Please select a numeric column.'
+        }
+    else:
+        # Default to first numeric column
+        value_col = column_types['numeric'][0]
     
     try:
         # Prepare data
