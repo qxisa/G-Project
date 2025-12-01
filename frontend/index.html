@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Data Analytics Dashboard</title>
+    
+    <!-- Plotly.js for interactive charts -->
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📊 Interactive Data Analytics Dashboard</h1>
+            <p class="subtitle">Upload a CSV file to analyze and visualize your data</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="section upload-section">
+            <h2>📁 Upload Data</h2>
+            <div class="upload-container">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file-input" accept=".csv" />
+                        <label for="file-input" class="file-label">
+                            <span id="file-name">Choose a CSV file...</span>
+                        </label>
+                    </div>
+                    <button type="submit" id="upload-btn" class="btn btn-primary" disabled>
+                        Upload & Analyze
+                    </button>
+                </form>
+                <div id="upload-status" class="status-message"></div>
+            </div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing your data...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="error-alert" class="alert alert-error hidden"></div>
+
+        <!-- Success Alert -->
+        <div id="success-alert" class="alert alert-success hidden"></div>
+
+        <!-- Summary Section (Initially Hidden) -->
+        <section id="summary-section" class="section hidden">
+            <h2>📈 Data Summary</h2>
+            
+            <!-- Overview Cards -->
+            <div class="cards-container" id="overview-cards"></div>
+            
+            <!-- Quick Insights -->
+            <div class="insights-container" id="insights-container">
+                <h3>💡 Quick Insights</h3>
+                <ul id="insights-list"></ul>
+            </div>
+            
+            <!-- Detailed Statistics -->
+            <div class="stats-container" id="stats-container">
+                <h3>📊 Numeric Statistics</h3>
+                <div id="numeric-stats"></div>
+            </div>
+            
+            <!-- Categorical Statistics -->
+            <div class="stats-container" id="categorical-stats-container">
+                <h3>🏷️ Categorical Statistics</h3>
+                <div id="categorical-stats"></div>
+            </div>
+        </section>
+
+        <!-- Visualization Section (Initially Hidden) -->
+        <section id="viz-section" class="section hidden">
+            <h2>📉 Visualizations</h2>
+            
+            <!-- Chart Controls -->
+            <div class="chart-controls">
+                <button class="btn btn-chart active" data-chart="line">📈 Line Chart</button>
+                <button class="btn btn-chart" data-chart="bar">📊 Bar Chart</button>
+                <button class="btn btn-chart" data-chart="histogram">📶 Histogram</button>
+                <button class="btn btn-chart" data-chart="scatter">🔵 Scatter Plot</button>
+            </div>
+            
+            <!-- Chart Display Area -->
+            <div id="chart-container" class="chart-container">
+                <div id="chart" class="chart-placeholder">
+                    <p>Select a chart type above to visualize your data</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Forecast Section (Initially Hidden) -->
+        <section id="forecast-section" class="section hidden">
+            <h2>🔮 Forecasting</h2>
+            <div class="forecast-controls">
+                <label for="periods-input">Forecast Periods:</label>
+                <input type="number" id="periods-input" value="5" min="1" max="30" />
+                <button id="forecast-btn" class="btn btn-primary">Generate Forecast</button>
+            </div>
+            <div id="forecast-results" class="forecast-results"></div>
+            <div id="forecast-chart" class="chart-container"></div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Interactive Data Analytics Dashboard | No data is stored permanently</p>
+        </footer>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
