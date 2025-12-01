@@ -68,6 +68,11 @@ A simple, clean web application for uploading CSV files and viewing summary stat
    ```
    
    The server will start on `http://localhost:5000`
+   
+   **For development with debug mode enabled:**
+   ```bash
+   FLASK_DEBUG=true python app.py
+   ```
 
 4. **Open the dashboard**:
    Open your browser and navigate to `http://localhost:5000`

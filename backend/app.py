@@ -427,8 +427,12 @@ def server_error(e):
 
 if __name__ == '__main__':
     # Run the Flask development server
-    # Debug mode is enabled for development
+    # Debug mode is controlled by FLASK_DEBUG environment variable (default: False)
+    import os
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
+    
     print("Starting Interactive Data Analytics Dashboard Backend...")
     print("Server running at http://localhost:5000")
     print("Open http://localhost:5000 in your browser to access the dashboard.")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    print(f"Debug mode: {debug_mode}")
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
