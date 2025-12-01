@@ -1,6 +1,10 @@
 # Interactive Data Analytics Dashboard
 
-A simple, clean web application for uploading CSV files and viewing summary statistics, interactive charts, and optional forecasting. Built with Flask (Python backend) and vanilla JavaScript frontend.
+A simple, clean web application for uploading CSV files and viewing summary statistics, interactive charts, and optional forecasting. 
+
+**Two versions available:**
+- **Static Version** (GitHub Pages): Runs entirely in the browser with no server required
+- **Flask Version**: Full Python backend for local development
 
 ## 📊 Features
 
@@ -22,33 +26,64 @@ A simple, clean web application for uploading CSV files and viewing summary stat
 ## 🏗️ Architecture
 
 ```
-├── backend/
-│   ├── app.py                  # Flask application (main entry point)
+├── docs/                          # GitHub Pages static version
+│   ├── index.html                 # Main HTML page (static)
+│   ├── css/
+│   │   └── style.css              # Stylesheet
+│   └── js/
+│       ├── data-processor.js      # CSV parsing and data processing
+│       ├── analysis.js            # Statistics computation
+│       ├── charts.js              # Plotly chart generation
+│       ├── forecast.js            # Linear regression forecasting
+│       └── main.js                # Main application logic
+├── backend/                       # Flask backend (for local development)
+│   ├── app.py                     # Flask application (main entry point)
 │   ├── analysis/
-│   │   ├── preprocessing.py    # Data cleaning and preparation
-│   │   ├── analysis.py         # Summary statistics computation
-│   │   └── forecast.py         # Linear regression forecasting
+│   │   ├── preprocessing.py       # Data cleaning and preparation
+│   │   ├── analysis.py            # Summary statistics computation
+│   │   └── forecast.py            # Linear regression forecasting
 │   └── visualization/
-│       └── charts.py           # Plotly chart generation
-├── frontend/
-│   ├── index.html              # Main HTML page
+│       └── charts.py              # Plotly chart generation
+├── frontend/                      # Frontend for Flask version
+│   ├── index.html                 # Main HTML page
 │   └── static/
 │       ├── css/
-│       │   └── style.css       # Stylesheet
+│       │   └── style.css          # Stylesheet
 │       └── js/
-│           └── main.js         # Frontend JavaScript
-├── requirements.txt            # Python dependencies
-└── README.md                   # This file
+│           └── main.js            # Frontend JavaScript
+├── .github/workflows/
+│   └── deploy-pages.yml           # GitHub Pages deployment workflow
+├── requirements.txt               # Python dependencies (Flask version)
+└── README.md                      # This file
 ```
 
 ## 🚀 How to Run
 
-### Prerequisites
+### Option 1: GitHub Pages (Recommended - No Installation Required)
+
+The easiest way to use this application is through GitHub Pages:
+
+1. **Enable GitHub Pages** in your repository settings:
+   - Go to Settings → Pages
+   - Under "Source", select "GitHub Actions"
+   - The workflow will automatically deploy when you push to `main`
+
+2. **Access the dashboard**:
+   - After deployment, visit: `https://<your-username>.github.io/<repository-name>/`
+   - The application runs entirely in your browser - no server needed!
+
+3. **Manual deployment**:
+   - The GitHub Actions workflow (`deploy-pages.yml`) will automatically deploy on push to `main`
+   - You can also trigger it manually from the Actions tab
+
+### Option 2: Local Development with Flask
+
+#### Prerequisites
 
 - Python 3.8 or higher
 - pip (Python package manager)
 
-### Installation
+#### Installation
 
 1. **Clone the repository** (if not already):
    ```bash
@@ -117,7 +152,7 @@ python app.py
    - Click "Generate Forecast"
    - View predictions and forecast chart
 
-## 🔌 API Endpoints
+## 🔌 API Endpoints (Flask Version Only)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -128,6 +163,8 @@ python app.py
 | `/columns` | GET | Get column information |
 | `/status` | GET | Check data status |
 | `/clear` | POST | Clear uploaded data |
+
+> **Note**: The GitHub Pages version processes everything client-side and doesn't require these API endpoints.
 
 ## ⚠️ Error Handling
 
@@ -164,17 +201,17 @@ The application handles various error scenarios:
 
 ## 🛠️ Technologies Used
 
-**Backend**:
-- Flask (Python web framework)
-- Pandas (Data manipulation)
-- NumPy (Numerical computing)
-- Plotly (Chart generation)
-
-**Frontend**:
+**GitHub Pages Version (Static)**:
 - HTML5
 - CSS3 (Custom styling, no frameworks)
 - JavaScript (Vanilla JS, no frameworks)
 - Plotly.js (Interactive charts)
+
+**Flask Version (Backend)**:
+- Flask (Python web framework)
+- Pandas (Data manipulation)
+- NumPy (Numerical computing)
+- Plotly (Chart generation)
 
 ## 📝 License
 
