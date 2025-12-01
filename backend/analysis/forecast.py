@@ -176,7 +176,8 @@ def simple_forecast(df: pd.DataFrame, periods: int = 5) -> Dict[str, Any]:
         for i in range(1, periods + 1):
             future_x = last_x + (avg_interval * i)
             future_y = slope * future_x + intercept
-            future_date = last_date + pd.Timedelta(days=int(avg_interval * i))
+            # Use round() instead of int() to preserve decimal accuracy for date intervals
+            future_date = last_date + pd.Timedelta(days=round(avg_interval * i))
             
             forecast.append({
                 'date': str(future_date),

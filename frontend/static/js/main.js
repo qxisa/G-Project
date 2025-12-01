@@ -195,7 +195,8 @@ elements.uploadForm.addEventListener('submit', async function(e) {
         showError('Network error. Please check your connection and try again.');
     } finally {
         hideLoading();
-        elements.uploadBtn.disabled = false;
+        // Only re-enable the button if there's still a file selected
+        elements.uploadBtn.disabled = !elements.fileInput.files[0];
         elements.uploadBtn.textContent = 'Upload & Analyze';
     }
 });
@@ -337,11 +338,11 @@ function displayNumericStats(stats) {
         html += `
             <tr>
                 <td><strong>${col}</strong></td>
-                <td>${formatNumber(colStats.mean)}</td>
-                <td>${formatNumber(colStats.median)}</td>
-                <td>${formatNumber(colStats.std)}</td>
-                <td>${formatNumber(colStats.min)}</td>
-                <td>${formatNumber(colStats.max)}</td>
+                <td>${colStats.mean.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                <td>${colStats.median.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                <td>${colStats.std.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                <td>${colStats.min.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                <td>${colStats.max.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
             </tr>
         `;
     }

@@ -21,13 +21,21 @@ def standardize_column_names(df: pd.DataFrame) -> pd.DataFrame:
         DataFrame with standardized column names
     """
     # Convert column names to lowercase and replace spaces/special chars with underscores
-    df.columns = (
+    new_columns = (
         df.columns
         .str.lower()
         .str.strip()
         .str.replace(r'[^\w\s]', '', regex=True)
         .str.replace(r'\s+', '_', regex=True)
     )
+    
+    # Handle empty column names by assigning default names
+    new_columns = [
+        col if col else f'column_{i}' 
+        for i, col in enumerate(new_columns)
+    ]
+    
+    df.columns = new_columns
     return df
 
 

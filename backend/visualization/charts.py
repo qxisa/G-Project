@@ -113,7 +113,10 @@ def generate_bar_chart(df: pd.DataFrame, x_col: Optional[str] = None,
     # Aggregate data if categorical
     if x_col in column_types['categorical']:
         agg_df = df.groupby(x_col)[y_col].sum().reset_index()
-        agg_df = agg_df.sort_values(y_col, ascending=False).head(20)  # Top 20
+        # Show top categories if too many (configurable via max_categories parameter)
+        max_categories = 30
+        if len(agg_df) > max_categories:
+            agg_df = agg_df.sort_values(y_col, ascending=False).head(max_categories)
     else:
         agg_df = df[[x_col, y_col]].dropna()
     
