@@ -6,6 +6,13 @@
  */
 
 // ============================================
+// Constants
+// ============================================
+
+const MAX_CHART_CATEGORIES = 30;
+const MAX_COLOR_CATEGORIES = 10;
+
+// ============================================
 // Line Chart
 // ============================================
 
@@ -122,8 +129,7 @@ function generateBarChart(data, columnTypes, xCol = null, yCol = null) {
         
         // Sort by value and limit categories
         const entries = Object.entries(aggregated).sort((a, b) => b[1] - a[1]);
-        const maxCategories = 30;
-        const limited = entries.slice(0, maxCategories);
+        const limited = entries.slice(0, MAX_CHART_CATEGORIES);
         
         xValues = limited.map(e => e[0]);
         yValues = limited.map(e => e[1]);
@@ -228,7 +234,7 @@ function generateScatterPlot(data, columnTypes, xCol = null, yCol = null) {
     if (columnTypes.categorical.length > 0) {
         const colorCol = columnTypes.categorical[0];
         const uniqueValues = [...new Set(data.map(row => row[colorCol]))];
-        if (uniqueValues.length <= 10) {
+        if (uniqueValues.length <= MAX_COLOR_CATEGORIES) {
             colorValues = data.map(row => row[colorCol]);
         }
     }

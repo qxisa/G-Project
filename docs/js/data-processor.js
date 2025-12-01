@@ -7,6 +7,15 @@
  */
 
 // ============================================
+// Constants
+// ============================================
+
+const TYPE_DETECTION_SAMPLE_SIZE = 20;
+const DATE_DETECTION_THRESHOLD_KEYWORD = 0.3;
+const DATE_DETECTION_THRESHOLD_PATTERN = 0.5;
+const NUMERIC_DETECTION_THRESHOLD = 0.8;
+
+// ============================================
 // Data Store (In-memory storage)
 // ============================================
 
@@ -172,7 +181,7 @@ function detectColumnTypes(data) {
     
     columns.forEach(col => {
         const values = data.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
-        const sampleSize = Math.min(values.length, 20);
+        const sampleSize = Math.min(values.length, TYPE_DETECTION_SAMPLE_SIZE);
         const sample = values.slice(0, sampleSize);
         
         if (sampleSize === 0) {
@@ -192,12 +201,12 @@ function detectColumnTypes(data) {
             if (isNumeric(val)) numericCount++;
         });
         
-        // Determine type
-        if (isDateColumn && dateCount / sampleSize > 0.3) {
+        // Determine type based on thresholds
+        if (isDateColumn && dateCount / sampleSize > DATE_DETECTION_THRESHOLD_KEYWORD) {
             types.date.push(col);
-        } else if (dateCount / sampleSize > 0.5) {
+        } else if (dateCount / sampleSize > DATE_DETECTION_THRESHOLD_PATTERN) {
             types.date.push(col);
-        } else if (numericCount / sampleSize > 0.8) {
+        } else if (numericCount / sampleSize > NUMERIC_DETECTION_THRESHOLD) {
             types.numeric.push(col);
         } else {
             types.categorical.push(col);

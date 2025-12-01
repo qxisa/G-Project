@@ -165,15 +165,21 @@ function simpleForecast(data, columnTypes, periods = 5) {
             });
         }
         
+        // Create interpretation with direction
+        const roundedSlope = Math.round(slope * 10000) / 10000;
+        const absSlope = Math.abs(roundedSlope);
+        const direction = slope >= 0 ? 'increases' : 'decreases';
+        const interpretation = `For each day, ${valueCol} ${direction} by ${absSlope}`;
+        
         return {
             success: true,
             date_column: dateCol,
             value_column: valueCol,
             model: {
-                slope: Math.round(slope * 10000) / 10000,
+                slope: roundedSlope,
                 intercept: Math.round(intercept * 10000) / 10000,
                 r_squared: Math.round(rSquared * 10000) / 10000,
-                interpretation: `For each day, ${valueCol} changes by ${Math.round(slope * 10000) / 10000}`
+                interpretation: interpretation
             },
             historical_count: historical.length,
             historical: historical,

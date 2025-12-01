@@ -11,6 +11,14 @@
  */
 
 // ============================================
+// Constants
+// ============================================
+
+const DEFAULT_FORECAST_PERIODS = 5;
+const MAX_FORECAST_PERIODS = 30;
+const MIN_FORECAST_PERIODS = 1;
+
+// ============================================
 // Global Variables
 // ============================================
 
@@ -487,8 +495,8 @@ function generateForecast() {
         return;
     }
     
-    let periods = parseInt(elements.periodsInput.value) || 5;
-    periods = Math.max(1, Math.min(periods, 30)); // Limit between 1 and 30
+    let periods = parseInt(elements.periodsInput.value) || DEFAULT_FORECAST_PERIODS;
+    periods = Math.max(MIN_FORECAST_PERIODS, Math.min(periods, MAX_FORECAST_PERIODS));
     
     showLoading();
     elements.forecastBtn.disabled = true;
