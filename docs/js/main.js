@@ -54,11 +54,17 @@ const elements = {
     vizSection: document.getElementById('viz-section'),
     chartContainer: document.getElementById('chart'),
     chartButtons: document.querySelectorAll('.btn-chart'),
+    xColumnSelect: document.getElementById('x-column-select'),
+    yColumnSelect: document.getElementById('y-column-select'),
+    updateChartBtn: document.getElementById('update-chart-btn'),
+    exportChartBtn: document.getElementById('export-chart-btn'),
     
     // Forecast section
     forecastSection: document.getElementById('forecast-section'),
+    forecastColumnSelect: document.getElementById('forecast-column-select'),
     periodsInput: document.getElementById('periods-input'),
     forecastBtn: document.getElementById('forecast-btn'),
+    exportForecastBtn: document.getElementById('export-forecast-btn'),
     forecastResults: document.getElementById('forecast-results'),
     forecastChart: document.getElementById('forecast-chart')
 };
@@ -124,6 +130,105 @@ function hideAlerts() {
  */
 function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Populate column select dropdowns
+ * @param {Object} columnTypes - Object containing column types
+ */
+function populateColumnSelects(columnTypes) {
+    const allColumns = [
+        ...(columnTypes.numeric || []),
+        ...(columnTypes.categorical || []),
+        ...(columnTypes.date || [])
+    ];
+    
+    // Populate X-axis select
+    elements.xColumnSelect.innerHTML = '<option value="">Auto Select</option>';
+    allColumns.forEach(col => {
+        const option = document.createElement('option');
+        option.value = col;
+        option.textContent = col;
+        elements.xColumnSelect.appendChild(option);
+    });
+    
+    // Populate Y-axis select (numeric only)
+    elements.yColumnSelect.innerHTML = '<option value="">Auto Select</option>';
+    (columnTypes.numeric || []).forEach(col => {
+        const option = document.createElement('option');
+        option.value = col;
+        option.textContent = col;
+        elements.yColumnSelect.appendChild(option);
+    });
+    
+    // Populate forecast column select (numeric only)
+    elements.forecastColumnSelect.innerHTML = '<option value="">Auto Select</option>';
+    (columnTypes.numeric || []).forEach(col => {
+        const option = document.createElement('option');
+        option.value = col;
+        option.textContent = col;
+        elements.forecastColumnSelect.appendChild(option);
+    });
+}
+
+/**
+ * Export chart as image
+ */
+async function exportChart() {
+    try {
+        showLoading();
+        const chartDiv = document.getElementById('chart');
+        
+        // Use Plotly's built-in image export
+        const imgData = await Plotly.toImage(chartDiv, {
+            format: 'png',
+            width: 1200,
+            height: 800
+        });
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `chart-${currentChart}-${new Date().getTime()}.png`;
+        link.href = imgData;
+        link.click();
+        
+        showSuccess('Chart exported successfully!');
+    } catch (error) {
+        console.error('Export error:', error);
+        showError('Failed to export chart. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Export forecast as image
+ */
+async function exportForecast() {
+    try {
+        showLoading();
+        const forecastDiv = document.getElementById('forecast-chart');
+        
+        // Use Plotly's built-in image export
+        const imgData = await Plotly.toImage(forecastDiv, {
+            format: 'png',
+            width: 1200,
+            height: 800
+        });
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `forecast-${new Date().getTime()}.png`;
+        link.href = imgData;
+        link.click();
+        
+        showSuccess('Forecast exported successfully!');
+    } catch (error) {
+        console.error('Export error:', error);
+        showError('Failed to export forecast. Please try again.');
+    } finally {
+        hideLoading();
+    }
 }
 
 // ============================================
@@ -248,8 +353,9 @@ function displaySummary(data) {
     // Display overview cards
     displayOverviewCards(summary.overview);
     
-    // Display insights
-    displayInsights(insights);
+    // Filter and display only helpful insights (limit to top 6)
+    const filteredInsights = filterHelpfulInsights(insights);
+    displayInsights(filteredInsights);
     
     // Display numeric statistics
     displayNumericStats(summary.numeric_stats);
@@ -260,6 +366,9 @@ function displaySummary(data) {
     // Update available chart buttons
     updateChartButtons(available_charts);
     
+    // Populate column selects
+    populateColumnSelects(summary.column_types);
+    
     // Show visualization section
     elements.vizSection.classList.remove('hidden');
     
@@ -269,6 +378,31 @@ function displaySummary(data) {
     } else {
         elements.forecastSection.classList.add('hidden');
     }
+}
+
+/**
+ * Filter insights to show only the most helpful ones
+ * @param {Array} insights - List of all insights
+ * @returns {Array} Filtered list of helpful insights
+ */
+function filterHelpfulInsights(insights) {
+    // Limit insights to most important ones
+    const filteredInsights = [];
+    
+    // Add dataset overview
+    if (insights.length > 0) {
+        filteredInsights.push(insights[0]); // Dataset size info
+    }
+    
+    // Add numeric insights for only the first 2-3 numeric columns
+    const numericInsights = insights.filter(i => i.includes('ranges from') || i.includes('avg:'));
+    filteredInsights.push(...numericInsights.slice(0, 3));
+    
+    // Add period insights (best/worst)
+    const periodInsights = insights.filter(i => i.includes('Best '));
+    filteredInsights.push(...periodInsights.slice(0, 2));
+    
+    return filteredInsights.slice(0, 6); // Max 6 insights
 }
 
 /**
@@ -443,7 +577,11 @@ function loadChart(chartType) {
         const data = DataProcessor.getData();
         const columnTypes = DataProcessor.getColumnTypes();
         
-        const result = Charts.generateChart(chartType, data, columnTypes);
+        // Get selected columns from dropdowns
+        const xCol = elements.xColumnSelect.value || null;
+        const yCol = elements.yColumnSelect.value || null;
+        
+        const result = Charts.generateChart(chartType, data, columnTypes, xCol, yCol);
         
         if (result.success) {
             // Configure responsive layout
@@ -482,6 +620,14 @@ elements.chartButtons.forEach(btn => {
     });
 });
 
+// Add click handler to update chart button
+elements.updateChartBtn.addEventListener('click', function() {
+    loadChart(currentChart);
+});
+
+// Add click handler to export chart button
+elements.exportChartBtn.addEventListener('click', exportChart);
+
 // ============================================
 // Forecasting
 // ============================================
@@ -498,6 +644,9 @@ function generateForecast() {
     let periods = parseInt(elements.periodsInput.value) || DEFAULT_FORECAST_PERIODS;
     periods = Math.max(MIN_FORECAST_PERIODS, Math.min(periods, MAX_FORECAST_PERIODS));
     
+    // Get selected column
+    const selectedColumn = elements.forecastColumnSelect.value || null;
+    
     showLoading();
     elements.forecastBtn.disabled = true;
     elements.forecastBtn.textContent = 'Generating...';
@@ -506,7 +655,7 @@ function generateForecast() {
         const data = DataProcessor.getData();
         const columnTypes = DataProcessor.getColumnTypes();
         
-        const result = Forecast.simpleForecast(data, columnTypes, periods);
+        const result = Forecast.simpleForecast(data, columnTypes, periods, selectedColumn);
         
         if (result.success) {
             displayForecastResults(result);
@@ -630,6 +779,9 @@ function createForecastChart(result) {
 
 // Add click handler to forecast button
 elements.forecastBtn.addEventListener('click', generateForecast);
+
+// Add click handler to export forecast button
+elements.exportForecastBtn.addEventListener('click', exportForecast);
 
 // ============================================
 // Initialization

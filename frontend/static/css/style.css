@@ -340,6 +340,65 @@ body {
 }
 
 /* ============================================
+   Column Selection Controls
+   ============================================ */
+.column-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.control-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.column-select {
+    padding: 10px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    min-width: 180px;
+    background: var(--card-background);
+    color: var(--text-color);
+}
+
+.column-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #218838;
+}
+
+/* ============================================
    Chart Container
    ============================================ */
 .chart-container {
