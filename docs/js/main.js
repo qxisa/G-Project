@@ -476,10 +476,11 @@ function displayInsights(insights) {
  * @param {Object} stats - Numeric statistics object
  */
 function displayNumericStats(stats) {
-    const columns = Object.keys(stats);
+    // Filter out ID columns from display
+    const filteredStats = Object.entries(stats).filter(([col, colStats]) => !colStats.isIdColumn);
     
-    if (columns.length === 0) {
-        elements.numericStats.innerHTML = '<p>No numeric columns found.</p>';
+    if (filteredStats.length === 0) {
+        elements.numericStats.innerHTML = '<p>No meaningful numeric columns found.</p>';
         return;
     }
     
@@ -498,7 +499,7 @@ function displayNumericStats(stats) {
             <tbody>
     `;
     
-    for (const [col, colStats] of Object.entries(stats)) {
+    for (const [col, colStats] of filteredStats) {
         html += `
             <tr>
                 <td><strong>${col}</strong></td>
