@@ -99,11 +99,6 @@ function isSequentialId(data, colName) {
     const values = data.map(row => row[colName]).filter(v => v !== null && !isNaN(v));
     if (values.length < 2) return false;
     
-    // First check: if column name suggests ID, be more lenient
-    if (isIdColumn(colName)) {
-        return true; // Rely on name-based detection
-    }
-    
     // Check if all values are integers
     const allIntegers = values.every(v => Number.isInteger(v));
     if (!allIntegers) return false; // Non-integers are not IDs
