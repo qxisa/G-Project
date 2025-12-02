@@ -66,7 +66,18 @@ const elements = {
     forecastBtn: document.getElementById('forecast-btn'),
     exportForecastBtn: document.getElementById('export-forecast-btn'),
     forecastResults: document.getElementById('forecast-results'),
-    forecastChart: document.getElementById('forecast-chart')
+    forecastChart: document.getElementById('forecast-chart'),
+    
+    // AI Summary section
+    aiSummarySection: document.getElementById('ai-summary-section'),
+    aiColumnsSelect: document.getElementById('ai-columns-select'),
+    generateAiSummaryBtn: document.getElementById('generate-ai-summary-btn'),
+    aiSummaryResults: document.getElementById('ai-summary-results'),
+    aiSummaryContent: document.getElementById('ai-summary-content'),
+    hfApiKey: document.getElementById('hf-api-key'),
+    saveApiKeyBtn: document.getElementById('save-api-key-btn'),
+    clearApiKeyBtn: document.getElementById('clear-api-key-btn'),
+    apiKeyStatus: document.getElementById('api-key-status')
 };
 
 // ============================================
@@ -168,6 +179,15 @@ function populateColumnSelects(columnTypes) {
         option.value = col;
         option.textContent = col;
         elements.forecastColumnSelect.appendChild(option);
+    });
+    
+    // Populate AI columns select (all columns)
+    elements.aiColumnsSelect.innerHTML = '';
+    allColumns.forEach(col => {
+        const option = document.createElement('option');
+        option.value = col;
+        option.textContent = col;
+        elements.aiColumnsSelect.appendChild(option);
     });
 }
 
@@ -378,6 +398,9 @@ function displaySummary(data) {
     } else {
         elements.forecastSection.classList.add('hidden');
     }
+    
+    // Always show AI summary section
+    elements.aiSummarySection.classList.remove('hidden');
 }
 
 /**
@@ -453,10 +476,11 @@ function displayInsights(insights) {
  * @param {Object} stats - Numeric statistics object
  */
 function displayNumericStats(stats) {
-    const columns = Object.keys(stats);
+    // Filter out ID columns from display
+    const filteredStats = Object.entries(stats).filter(([col, colStats]) => !colStats.isIdColumn);
     
-    if (columns.length === 0) {
-        elements.numericStats.innerHTML = '<p>No numeric columns found.</p>';
+    if (filteredStats.length === 0) {
+        elements.numericStats.innerHTML = '<p>No meaningful numeric columns found.</p>';
         return;
     }
     
@@ -475,7 +499,7 @@ function displayNumericStats(stats) {
             <tbody>
     `;
     
-    for (const [col, colStats] of Object.entries(stats)) {
+    for (const [col, colStats] of filteredStats) {
         html += `
             <tr>
                 <td><strong>${col}</strong></td>
@@ -784,6 +808,130 @@ elements.forecastBtn.addEventListener('click', generateForecast);
 elements.exportForecastBtn.addEventListener('click', exportForecast);
 
 // ============================================
+// AI Summary Functions
+// ============================================
+
+/**
+ * Handle API key save
+ */
+function handleSaveApiKey() {
+    const apiKey = elements.hfApiKey.value.trim();
+    
+    if (!apiKey) {
+        elements.apiKeyStatus.textContent = '⚠️ Please enter an API key';
+        elements.apiKeyStatus.className = 'api-key-status error';
+        return;
+    }
+    
+    if (AISummary.saveApiKey(apiKey)) {
+        elements.apiKeyStatus.textContent = '✅ API key saved successfully!';
+        elements.apiKeyStatus.className = 'api-key-status success';
+        elements.hfApiKey.value = '';
+    } else {
+        elements.apiKeyStatus.textContent = '❌ Failed to save API key';
+        elements.apiKeyStatus.className = 'api-key-status error';
+    }
+}
+
+/**
+ * Handle API key clear
+ */
+function handleClearApiKey() {
+    if (AISummary.clearApiKey()) {
+        elements.apiKeyStatus.textContent = '🗑️ API key cleared';
+        elements.apiKeyStatus.className = 'api-key-status';
+        elements.hfApiKey.value = '';
+    }
+}
+
+/**
+ * Generate AI summary
+ */
+async function handleGenerateAISummary() {
+    if (!DataProcessor.isDataLoaded()) {
+        showError('Please upload a CSV file first.');
+        return;
+    }
+    
+    // Get selected columns
+    const selectedOptions = Array.from(elements.aiColumnsSelect.selectedOptions);
+    const selectedColumns = selectedOptions.map(opt => opt.value);
+    
+    if (selectedColumns.length === 0) {
+        showError('Please select at least one column to analyze.');
+        return;
+    }
+    
+    // Check if API key is set
+    if (!AISummary.hasApiKey()) {
+        showError('Please enter your Hugging Face API key first.');
+        return;
+    }
+    
+    showLoading();
+    elements.generateAiSummaryBtn.disabled = true;
+    elements.generateAiSummaryBtn.textContent = '⏳ Generating Insights...';
+    
+    try {
+        const data = DataProcessor.getData();
+        const columnTypes = DataProcessor.getColumnTypes();
+        
+        const result = await AISummary.generateAISummary(data, selectedColumns, columnTypes);
+        
+        if (result.success) {
+            displayAISummaryResults(result);
+            showSuccess('AI insights generated successfully!');
+        } else {
+            // Try fallback to simple summary
+            if (result.error.includes('model is currently loading') || result.error.includes('API')) {
+                showError(result.error + ' Using statistical summary instead...');
+                const fallbackResult = AISummary.generateSimpleSummary(data, selectedColumns, columnTypes);
+                displayAISummaryResults(fallbackResult);
+            } else {
+                showError(result.error);
+            }
+        }
+    } catch (error) {
+        console.error('AI Summary Error:', error);
+        showError('Failed to generate AI summary. Please try again.');
+    } finally {
+        hideLoading();
+        elements.generateAiSummaryBtn.disabled = false;
+        elements.generateAiSummaryBtn.textContent = '🔍 Generate AI Insights';
+    }
+}
+
+/**
+ * Display AI summary results
+ * @param {Object} result - AI summary result
+ */
+function displayAISummaryResults(result) {
+    elements.aiSummaryResults.classList.remove('hidden');
+    
+    let html = '';
+    
+    if (result.is_fallback) {
+        html += '<div style="background: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px;">';
+        html += '⚠️ <strong>Note:</strong> Using statistical analysis. For AI-powered insights, ensure your API key is valid and the model is loaded.';
+        html += '</div>';
+    }
+    
+    html += `<p><strong>Columns Analyzed:</strong> ${result.columns_analyzed.join(', ')}</p>`;
+    html += '<hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">';
+    
+    // Format the summary text
+    const summaryText = result.summary.replace(/\n/g, '<br>');
+    html += `<div style="line-height: 1.8;">${summaryText}</div>`;
+    
+    elements.aiSummaryContent.innerHTML = html;
+}
+
+// Add click handlers for AI summary
+elements.saveApiKeyBtn.addEventListener('click', handleSaveApiKey);
+elements.clearApiKeyBtn.addEventListener('click', handleClearApiKey);
+elements.generateAiSummaryBtn.addEventListener('click', handleGenerateAISummary);
+
+// ============================================
 // Initialization
 // ============================================
 
@@ -793,6 +941,12 @@ elements.exportForecastBtn.addEventListener('click', exportForecast);
 function init() {
     console.log('Interactive Data Analytics Dashboard initialized (Static Version)');
     console.log('Running entirely in the browser - no backend required!');
+    
+    // Check if API key is stored and show status
+    if (AISummary.hasApiKey()) {
+        elements.apiKeyStatus.textContent = '✅ API key is configured';
+        elements.apiKeyStatus.className = 'api-key-status success';
+    }
 }
 
 // Run initialization when DOM is ready

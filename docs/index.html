@@ -137,6 +137,48 @@
             <div id="forecast-chart" class="chart-container"></div>
         </section>
 
+        <!-- AI Summary Section (Initially Hidden) -->
+        <section id="ai-summary-section" class="section hidden">
+            <h2>🤖 AI-Generated Insights</h2>
+            <p class="section-description">Select columns to analyze and generate AI-powered insights based on your data.</p>
+            
+            <div class="ai-controls">
+                <div class="control-group">
+                    <label for="ai-columns-select">Select Columns for Analysis:</label>
+                    <div class="multi-select-wrapper">
+                        <select id="ai-columns-select" class="column-select" multiple size="5">
+                        </select>
+                        <small class="help-text">Hold Ctrl/Cmd to select multiple columns</small>
+                    </div>
+                </div>
+                <button id="generate-ai-summary-btn" class="btn btn-primary">🔍 Generate AI Insights</button>
+            </div>
+            
+            <div id="ai-summary-results" class="ai-summary-results hidden">
+                <h3>📊 AI Analysis Report</h3>
+                <div id="ai-summary-content" class="ai-summary-content"></div>
+            </div>
+            
+            <div id="ai-setup-info" class="info-box">
+                <h4>ℹ️ About AI Insights</h4>
+                <p>This feature uses the <strong>Hugging Face Inference API</strong> to generate intelligent summaries of your data.</p>
+                <p><strong>Free Setup Instructions:</strong></p>
+                <ol>
+                    <li>Visit <a href="https://huggingface.co/join" target="_blank">Hugging Face</a> and create a free account</li>
+                    <li>Go to your <a href="https://huggingface.co/settings/tokens" target="_blank">Settings → Access Tokens</a></li>
+                    <li>Create a new token (read permissions are sufficient)</li>
+                    <li>Enter your API key below (stored locally in your browser only)</li>
+                </ol>
+                <div class="api-key-input-group">
+                    <label for="hf-api-key">Hugging Face API Key:</label>
+                    <input type="password" id="hf-api-key" class="api-key-input" placeholder="hf_xxxxxxxxxxxxx" />
+                    <button id="save-api-key-btn" class="btn btn-secondary">💾 Save Key</button>
+                    <button id="clear-api-key-btn" class="btn btn-secondary">🗑️ Clear Key</button>
+                </div>
+                <div id="api-key-status" class="api-key-status"></div>
+            </div>
+        </section>
+
         <!-- Footer -->
         <footer class="footer">
             <p>Interactive Data Analytics Dashboard | Runs entirely in your browser | No data is stored</p>
@@ -148,6 +190,7 @@
     <script src="js/analysis.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/forecast.js"></script>
+    <script src="js/ai-summary.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
