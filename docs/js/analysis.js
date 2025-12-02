@@ -78,7 +78,82 @@ function isIdColumn(colName) {
            lowerName.endsWith('id') ||
            lowerName.startsWith('id_') ||
            lowerName === 'index' ||
-           lowerName === 'row_number';
+           lowerName === 'idx' ||
+           lowerName === 'row_number' ||
+           lowerName === 'rownumber' ||
+           lowerName === 'row' ||
+           lowerName === 'key' ||
+           lowerName.endsWith('_key') ||
+           lowerName.endsWith('_idx');
+}
+
+/**
+ * Check if a numeric column appears to be an ID based on its values
+ * @param {Array} data - Array of row objects
+ * @param {string} colName - Column name
+ * @returns {boolean}
+ */
+function isSequentialId(data, colName) {
+    if (data.length < 2) return false;
+    
+    const values = data.map(row => row[colName]).filter(v => v !== null && !isNaN(v));
+    if (values.length < 2) return false;
+    
+    // First check: if column name suggests ID, be more lenient
+    if (isIdColumn(colName)) {
+        return true; // Rely on name-based detection
+    }
+    
+    // Check if all values are integers
+    const allIntegers = values.every(v => Number.isInteger(v));
+    if (!allIntegers) return false; // Non-integers are not IDs
+    
+    // Check if values are sequential integers starting from 0 or 1
+    const sorted = [...values].sort((a, b) => a - b);
+    let isSequential = true;
+    
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] - sorted[i-1] !== 1) {
+            isSequential = false;
+            break;
+        }
+    }
+    
+    // If sequential starting from 0 or 1, it's likely an ID
+    if (isSequential && (sorted[0] === 0 || sorted[0] === 1)) {
+        return true;
+    }
+    
+    return false; // Otherwise, not an ID
+}
+
+/**
+ * Determine if a column should be featured/displayed to users
+ * @param {string} colName - Column name
+ * @param {Array} data - Array of row objects
+ * @param {Object} stats - Column statistics
+ * @returns {boolean}
+ */
+function shouldFeatureColumn(colName, data, stats) {
+    // Don't feature ID columns
+    if (isIdColumn(colName)) return false;
+    
+    // Don't feature sequential IDs
+    if (stats && isSequentialId(data, colName)) return false;
+    
+    // Feature columns with meaningful variance
+    if (stats && stats.std !== undefined) {
+        // If standard deviation is 0 or very low, data is not interesting
+        if (stats.std === 0) return false;
+        
+        // If coefficient of variation is very low, might not be interesting
+        // (unless the mean is also very low)
+        if (stats.mean !== 0 && Math.abs(stats.std / stats.mean) < 0.01 && Math.abs(stats.mean) > 1) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 /**
@@ -94,7 +169,7 @@ function computeNumericStats(data, numericCols) {
         const values = data.map(row => row[col]).filter(v => v !== null && !isNaN(v));
         
         if (values.length > 0) {
-            stats[col] = {
+            const colStats = {
                 mean: Math.round(mean(values) * 100) / 100,
                 median: Math.round(calculateMedian(values) * 100) / 100,
                 std: Math.round(stdDev(values) * 100) / 100,
@@ -102,8 +177,11 @@ function computeNumericStats(data, numericCols) {
                 max: Math.round(Math.max(...values) * 100) / 100,
                 count: values.length,
                 sum: Math.round(values.reduce((a, b) => a + b, 0) * 100) / 100,
-                isIdColumn: isIdColumn(col)
+                isIdColumn: isIdColumn(col) || isSequentialId(data, col)
             };
+            
+            // Only include columns that should be featured
+            stats[col] = colStats;
         }
     });
     
@@ -131,12 +209,17 @@ function computeCategoricalStats(data, categoricalCols) {
             const sortedEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
             const uniqueCount = Object.keys(counts).length;
             
-            stats[col] = {
-                unique_count: uniqueCount,
-                most_common: sortedEntries.length > 0 ? sortedEntries[0][0] : null,
-                most_common_count: sortedEntries.length > 0 ? sortedEntries[0][1] : 0,
-                top_values: Object.fromEntries(sortedEntries.slice(0, 10))
-            };
+            // Skip if it looks like an ID column (very high unique count)
+            const isLikelyId = isIdColumn(col) || uniqueCount / values.length > 0.95;
+            
+            if (!isLikelyId) {
+                stats[col] = {
+                    unique_count: uniqueCount,
+                    most_common: sortedEntries.length > 0 ? sortedEntries[0][0] : null,
+                    most_common_count: sortedEntries.length > 0 ? sortedEntries[0][1] : 0,
+                    top_values: Object.fromEntries(sortedEntries.slice(0, 10))
+                };
+            }
         }
     });
     
