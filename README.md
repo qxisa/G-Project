@@ -12,7 +12,7 @@ A simple, clean web application for uploading CSV files and viewing summary stat
 - **Data Cleaning**: Automatic column standardization, missing value handling, and date parsing
 - **Summary Statistics**: 
   - Row and column counts
-  - Numeric statistics (mean, median, std, min, max) - automatically excludes ID columns
+  - Numeric statistics (mean, median, std, min, max)
   - Categorical summaries (unique values, most common)
   - Best/worst periods (if date column exists)
 - **Interactive Charts** (powered by Plotly.js):
@@ -21,11 +21,6 @@ A simple, clean web application for uploading CSV files and viewing summary stat
   - Histogram
   - Scatter Plot
 - **Forecasting**: Simple linear regression predictions for time-series data
-- **🤖 AI-Generated Insights** (NEW): 
-  - AI-powered analysis using Hugging Face API
-  - Intelligent summaries based on selected metrics
-  - Free to use with Hugging Face account
-  - [Setup Guide](docs/AI_SETUP.md)
 - **Error Handling**: Robust error feedback for invalid files, empty data, etc.
 
 ## 🏗️ Architecture

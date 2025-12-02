@@ -66,22 +66,6 @@ function valueCounts(arr) {
 // ============================================
 
 /**
- * Check if a column name suggests it's an ID column
- * @param {string} colName - Column name
- * @returns {boolean}
- */
-function isIdColumn(colName) {
-    const lowerName = colName.toLowerCase();
-    // Check for common ID patterns
-    return lowerName === 'id' || 
-           lowerName.endsWith('_id') || 
-           lowerName.endsWith('id') ||
-           lowerName.startsWith('id_') ||
-           lowerName === 'index' ||
-           lowerName === 'row_number';
-}
-
-/**
  * Compute summary statistics for numeric columns
  * @param {Array} data - Array of row objects
  * @param {Array} numericCols - List of numeric column names
@@ -101,8 +85,7 @@ function computeNumericStats(data, numericCols) {
                 min: Math.round(Math.min(...values) * 100) / 100,
                 max: Math.round(Math.max(...values) * 100) / 100,
                 count: values.length,
-                sum: Math.round(values.reduce((a, b) => a + b, 0) * 100) / 100,
-                isIdColumn: isIdColumn(col)
+                sum: Math.round(values.reduce((a, b) => a + b, 0) * 100) / 100
             };
         }
     });
@@ -307,23 +290,19 @@ function getQuickInsights(summary) {
     const overview = summary.overview || {};
     insights.push(`Dataset contains ${overview.total_rows?.toLocaleString() || 0} rows and ${overview.total_columns || 0} columns`);
     
-    // Numeric insights - exclude ID columns
+    // Numeric insights
     const numericStats = summary.numeric_stats || {};
     Object.entries(numericStats).forEach(([col, stats]) => {
-        // Skip ID columns in insights
-        if (!stats.isIdColumn) {
-            insights.push(`${col}: ranges from ${stats.min.toLocaleString()} to ${stats.max.toLocaleString()} (avg: ${stats.mean.toLocaleString()})`);
-        }
+        insights.push(`${col}: ranges from ${stats.min} to ${stats.max} (avg: ${stats.mean})`);
     });
     
-    // Best period insights - exclude ID columns
+    // Best period insights
     const periodAnalysis = summary.period_analysis || {};
     Object.entries(periodAnalysis).forEach(([col, periods]) => {
-        // Skip ID columns in period analysis
-        if (!isIdColumn(col) && periods.best_period) {
+        if (periods.best_period) {
             const dateStr = periods.best_period.date;
             const formattedDate = dateStr.includes('T') ? new Date(dateStr).toLocaleDateString() : dateStr;
-            insights.push(`Best ${col}: ${periods.best_period.value.toLocaleString()} on ${formattedDate}`);
+            insights.push(`Best ${col}: ${periods.best_period.value} on ${formattedDate}`);
         }
     });
     
