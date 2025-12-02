@@ -6,6 +6,14 @@
  */
 
 // ============================================
+// Constants for Data Analysis
+// ============================================
+
+const ID_UNIQUENESS_THRESHOLD = 0.95;
+const MIN_COEFFICIENT_VARIATION = 0.01;
+const MIN_MEANINGFUL_MEAN = 1;
+
+// ============================================
 // Statistical Functions
 // ============================================
 
@@ -99,12 +107,12 @@ function isSequentialId(data, colName) {
     const values = data.map(row => row[colName]).filter(v => v !== null && !isNaN(v));
     if (values.length < 2) return false;
     
-    // Check if all values are integers
-    const allIntegers = values.every(v => Number.isInteger(v));
+    // Check if all values are integers (handle both numbers and string numbers)
+    const allIntegers = values.every(v => Number.isInteger(Number(v)));
     if (!allIntegers) return false; // Non-integers are not IDs
     
     // Check if values are sequential integers starting from 0 or 1
-    const sorted = [...values].sort((a, b) => a - b);
+    const sorted = [...values].map(v => Number(v)).sort((a, b) => a - b);
     let isSequential = true;
     
     for (let i = 1; i < sorted.length; i++) {
@@ -143,7 +151,7 @@ function shouldFeatureColumn(colName, data, stats) {
         
         // If coefficient of variation is very low, might not be interesting
         // (unless the mean is also very low)
-        if (stats.mean !== 0 && Math.abs(stats.std / stats.mean) < 0.01 && Math.abs(stats.mean) > 1) {
+        if (stats.mean !== 0 && Math.abs(stats.std / stats.mean) < MIN_COEFFICIENT_VARIATION && Math.abs(stats.mean) > MIN_MEANINGFUL_MEAN) {
             return false;
         }
     }
@@ -205,7 +213,7 @@ function computeCategoricalStats(data, categoricalCols) {
             const uniqueCount = Object.keys(counts).length;
             
             // Skip if it looks like an ID column (very high unique count)
-            const isLikelyId = isIdColumn(col) || uniqueCount / values.length > 0.95;
+            const isLikelyId = isIdColumn(col) || uniqueCount / values.length > ID_UNIQUENESS_THRESHOLD;
             
             if (!isLikelyId) {
                 stats[col] = {

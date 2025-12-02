@@ -11,6 +11,10 @@ from typing import Dict, List, Any, Optional
 from .preprocessing import detect_columns
 
 
+# Constants for data analysis
+ID_UNIQUENESS_THRESHOLD = 0.95
+
+
 def is_id_column(col_name: str) -> bool:
     """
     Check if a column name suggests it's an ID column.
@@ -63,8 +67,8 @@ def is_sequential_id(df: pd.DataFrame, col_name: str) -> bool:
         if len(numeric_data) < 2:
             return False
         
-        # Check if all values are integers
-        if not all(numeric_data.apply(lambda x: float(x).is_integer())):
+        # Check if all values are integers using modulo for better precision
+        if not all(numeric_data.apply(lambda x: x % 1 == 0)):
             return False
     except Exception:
         return False
@@ -136,7 +140,7 @@ def compute_categorical_stats(df: pd.DataFrame, categorical_cols: List[str]) -> 
             unique_count = int(col_data.nunique())
             
             # Skip if it looks like an ID column (very high unique count)
-            is_likely_id = is_id_column(col) or (unique_count / len(col_data) > 0.95)
+            is_likely_id = is_id_column(col) or (unique_count / len(col_data) > ID_UNIQUENESS_THRESHOLD)
             
             if not is_likely_id:
                 stats[col] = {
