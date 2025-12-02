@@ -608,18 +608,23 @@ function loadChart(chartType) {
         const result = Charts.generateChart(chartType, data, columnTypes, xCol, yCol);
         
         if (result.success) {
-            // Configure responsive layout
+            // Configure responsive layout with proper alignment
             result.chartData.layout = {
                 ...result.chartData.layout,
                 autosize: true,
-                margin: { l: 50, r: 30, t: 50, b: 50 }
+                width: null,  // Let it auto-size
+                height: null, // Let it auto-size
+                margin: { l: 60, r: 40, t: 60, b: 60 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
             };
             
-            // Render chart
+            // Render chart with proper configuration
             Plotly.react('chart', result.chartData.data, result.chartData.layout, {
                 responsive: true,
                 displayModeBar: true,
-                displaylogo: false
+                displaylogo: false,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
             });
         } else {
             showError(result.error || 'Failed to generate chart.');

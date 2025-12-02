@@ -11,6 +11,81 @@ from typing import Dict, List, Any, Optional
 from .preprocessing import detect_columns
 
 
+# Constants for data analysis
+ID_UNIQUENESS_THRESHOLD = 0.95
+
+
+def is_id_column(col_name: str) -> bool:
+    """
+    Check if a column name suggests it's an ID column.
+    
+    Args:
+        col_name: Column name to check
+        
+    Returns:
+        True if column appears to be an ID column
+    """
+    lower_name = col_name.lower()
+    return (
+        lower_name == 'id' or
+        lower_name.endswith('_id') or
+        lower_name.endswith('id') or
+        lower_name.startswith('id_') or
+        lower_name == 'index' or
+        lower_name == 'idx' or
+        lower_name == 'row_number' or
+        lower_name == 'rownumber' or
+        lower_name == 'row' or
+        lower_name == 'key' or
+        lower_name.endswith('_key') or
+        lower_name.endswith('_idx')
+    )
+
+
+def is_sequential_id(df: pd.DataFrame, col_name: str) -> bool:
+    """
+    Check if a numeric column appears to be a sequential ID based on values.
+    
+    Args:
+        df: Input DataFrame
+        col_name: Column name to check
+        
+    Returns:
+        True if column appears to be a sequential ID
+    """
+    if len(df) < 2:
+        return False
+    
+    col_data = df[col_name].dropna()
+    if len(col_data) < 2:
+        return False
+    
+    # Check if all values are numeric integers
+    try:
+        # Convert to numeric, coerce errors to NaN
+        numeric_data = pd.to_numeric(col_data, errors='coerce').dropna()
+        if len(numeric_data) < 2:
+            return False
+        
+        # Check if all values are integers using modulo for better precision
+        if not all(numeric_data.apply(lambda x: x % 1 == 0)):
+            return False
+    except Exception:
+        return False
+    
+    # Check if values are sequential starting from 0 or 1
+    sorted_vals = sorted(numeric_data.values)
+    is_sequential = all(
+        sorted_vals[i] - sorted_vals[i-1] == 1 
+        for i in range(1, len(sorted_vals))
+    )
+    
+    if is_sequential and (sorted_vals[0] == 0 or sorted_vals[0] == 1):
+        return True
+    
+    return False
+
+
 def compute_numeric_stats(df: pd.DataFrame, numeric_cols: List[str]) -> Dict[str, Dict[str, Any]]:
     """
     Compute summary statistics for numeric columns.
@@ -22,6 +97,7 @@ def compute_numeric_stats(df: pd.DataFrame, numeric_cols: List[str]) -> Dict[str
     Returns:
         Dictionary of statistics per numeric column including:
         - mean, median, std, min, max, count, sum
+        - is_id_column: boolean flag indicating if column is an ID
     """
     stats = {}
     
@@ -35,7 +111,8 @@ def compute_numeric_stats(df: pd.DataFrame, numeric_cols: List[str]) -> Dict[str
                 'min': round(float(col_data.min()), 2),
                 'max': round(float(col_data.max()), 2),
                 'count': int(col_data.count()),
-                'sum': round(float(col_data.sum()), 2)
+                'sum': round(float(col_data.sum()), 2),
+                'is_id_column': is_id_column(col) or is_sequential_id(df, col)
             }
     
     return stats
@@ -52,6 +129,7 @@ def compute_categorical_stats(df: pd.DataFrame, categorical_cols: List[str]) -> 
     Returns:
         Dictionary of statistics per categorical column including:
         - unique_count, most_common, value_counts (top 10)
+        Note: Filters out ID-like columns (highly unique values)
     """
     stats = {}
     
@@ -59,12 +137,18 @@ def compute_categorical_stats(df: pd.DataFrame, categorical_cols: List[str]) -> 
         col_data = df[col].dropna()
         if len(col_data) > 0:
             value_counts = col_data.value_counts()
-            stats[col] = {
-                'unique_count': int(col_data.nunique()),
-                'most_common': str(value_counts.index[0]) if len(value_counts) > 0 else None,
-                'most_common_count': int(value_counts.iloc[0]) if len(value_counts) > 0 else 0,
-                'top_values': {str(k): int(v) for k, v in value_counts.head(10).items()}
-            }
+            unique_count = int(col_data.nunique())
+            
+            # Skip if it looks like an ID column (very high unique count)
+            is_likely_id = is_id_column(col) or (unique_count / len(col_data) > ID_UNIQUENESS_THRESHOLD)
+            
+            if not is_likely_id:
+                stats[col] = {
+                    'unique_count': unique_count,
+                    'most_common': str(value_counts.index[0]) if len(value_counts) > 0 else None,
+                    'most_common_count': int(value_counts.iloc[0]) if len(value_counts) > 0 else 0,
+                    'top_values': {str(k): int(v) for k, v in value_counts.head(10).items()}
+                }
     
     return stats
 
@@ -218,15 +302,18 @@ def get_quick_insights(summary: Dict[str, Any]) -> List[str]:
     overview = summary.get('overview', {})
     insights.append(f"Dataset contains {overview.get('total_rows', 0):,} rows and {overview.get('total_columns', 0)} columns")
     
-    # Numeric insights
+    # Numeric insights - exclude ID columns
     numeric_stats = summary.get('numeric_stats', {})
     for col, stats in numeric_stats.items():
-        insights.append(f"{col}: ranges from {stats['min']} to {stats['max']} (avg: {stats['mean']})")
+        if not stats.get('is_id_column', False):
+            insights.append(f"{col}: ranges from {stats['min']:,} to {stats['max']:,} (avg: {stats['mean']:,})")
     
-    # Best/worst period insights
+    # Best/worst period insights - exclude ID columns
     period_analysis = summary.get('period_analysis', {})
     for col, periods in period_analysis.items():
-        if 'best_period' in periods:
-            insights.append(f"Best {col}: {periods['best_period']['value']} on {periods['best_period']['date']}")
+        # Check if this column is an ID in numeric_stats
+        is_id = numeric_stats.get(col, {}).get('is_id_column', False)
+        if not is_id and 'best_period' in periods:
+            insights.append(f"Best {col}: {periods['best_period']['value']:,} on {periods['best_period']['date']}")
     
     return insights
